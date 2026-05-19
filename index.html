@@ -1,0 +1,390 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1410" />
+  <title>InkedN — Reliable tattoo artists, real work, no filler.</title>
+  <meta name="description" content="InkedN is the middleman between you and the artists worth booking. Scroll real work from vetted tattooers, follow who you trust, book straight from the feed." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <!-- Firebase (modular SDK) — only loaded if firebase-config.js sets a real config.
+       Otherwise the app uses an in-memory demo store. See firebase-config.example.js. -->
+  <script src="firebase-config.js" defer></script>
+</head>
+<body>
+  <!-- ===================== ONBOARDING (gates the app on first visit) ===================== -->
+  <section id="onboarding" class="onboarding" aria-label="Choose your role" hidden>
+    <div class="onboarding-card">
+      <div class="onboarding-brand">
+        <svg viewBox="0 0 48 48" aria-hidden="true" class="brand-mark big">
+          <defs>
+            <linearGradient id="onbInkGrad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#3b2418"/>
+              <stop offset="1" stop-color="#7a4a2e"/>
+            </linearGradient>
+          </defs>
+          <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#onbInkGrad)"/>
+          <path d="M14 34 V14 L34 34 V14" fill="none" stroke="#f3e7d3" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="34" cy="14" r="2.8" fill="#d98b4a"/>
+        </svg>
+        <span class="brand-word">InkedN<span class="brand-dot">.</span></span>
+      </div>
+      <span class="eyebrow">Welcome</span>
+      <h1 class="display onboarding-title">Real work. Real artists. No filler.</h1>
+      <p class="lede">Choose how you want to use InkedN. You can switch later.</p>
+      <div class="onboarding-grid">
+        <button class="onboarding-choice" data-onboard-role="customer" type="button">
+          <div class="onboarding-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z M4 9h16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="8" cy="14" r="2" fill="currentColor"/></svg>
+          </div>
+          <h3>I'm here to get tattooed</h3>
+          <p>Scroll a feed of real, vetted work. Save artists you trust. Book straight from a piece you love.</p>
+          <span class="onboarding-cta">Open the feed →</span>
+        </button>
+        <button class="onboarding-choice" data-onboard-role="artist" type="button">
+          <div class="onboarding-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 20l4-1 10-10-3-3L5 16l-1 4z M14 6l4 4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+          </div>
+          <h3>I'm a tattoo artist</h3>
+          <p>Run your studio: manage leads, edit your profile, post work to the feed, and let the AI receptionist catch what you miss.</p>
+          <span class="onboarding-cta">Open the studio →</span>
+        </button>
+      </div>
+      <p class="muted small onboarding-foot">By continuing you agree to InkedN's beta terms. No payments yet.</p>
+    </div>
+  </section>
+
+  <!-- ===================== TOP BAR ===================== -->
+  <header class="topbar" role="banner">
+    <a class="brand" href="#" data-view="reels" aria-label="InkedN home">
+      <!-- Inline SVG logomark -->
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+        <defs>
+          <linearGradient id="inkGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3b2418"/>
+            <stop offset="1" stop-color="#7a4a2e"/>
+          </linearGradient>
+        </defs>
+        <rect x="2" y="2" width="44" height="44" rx="14" fill="url(#inkGrad)"/>
+        <!-- Stylized N with an ink-drop dot -->
+        <path d="M14 34 V14 L34 34 V14" fill="none" stroke="#f3e7d3" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="34" cy="14" r="2.8" fill="#d98b4a"/>
+      </svg>
+      <span class="brand-word">InkedN<span class="brand-dot">.</span></span>
+    </a>
+
+    <nav class="role-switch" aria-label="View as">
+      <button data-role="customer" class="role-btn is-active" type="button">Customer</button>
+      <button data-role="artist" class="role-btn" type="button">Artist</button>
+      <button data-role="admin" class="role-btn" type="button">Admin</button>
+    </nav>
+    <button class="reset-onb-btn" id="resetOnbBtn" type="button" title="Restart onboarding" aria-label="Restart onboarding">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 3-6.2 M4 4v6h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+
+    <button class="menu-btn" id="menuBtn" aria-label="Open menu" aria-expanded="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </header>
+
+  <!-- ===================== SIDE NAV (mobile drawer + desktop rail) ===================== -->
+  <aside class="sidenav" id="sidenav" aria-label="Primary">
+    <!-- Mobile-only role switch inside the drawer -->
+    <div class="sidenav-section sidenav-roles">
+      <p class="sidenav-label">View as</p>
+      <div class="role-switch role-switch-stack" aria-label="View as">
+        <button data-role="customer" class="role-btn is-active" type="button">Customer</button>
+        <button data-role="artist" class="role-btn" type="button">Artist</button>
+        <button data-role="admin" class="role-btn" type="button">Admin</button>
+      </div>
+    </div>
+    <div class="sidenav-section" data-role-section="customer">
+      <p class="sidenav-label">Discover</p>
+      <button class="navlink" data-view="reels">Feed</button>
+      <button class="navlink" data-view="search">Find artists</button>
+      <button class="navlink" data-view="saved">Saved artists</button>
+      <button class="navlink" data-view="assistant">AI assistant</button>
+      <button class="navlink" data-view="booking">New request</button>
+    </div>
+    <div class="sidenav-section" data-role-section="artist" hidden>
+      <p class="sidenav-label">Artist studio</p>
+      <button class="navlink" data-view="dashboard">Dashboard</button>
+      <button class="navlink" data-view="editor">Profile editor</button>
+    </div>
+    <div class="sidenav-section" data-role-section="admin" hidden>
+      <p class="sidenav-label">Admin</p>
+      <button class="navlink" data-view="admin">Overview</button>
+    </div>
+    <div class="sidenav-footer">
+      <p class="muted small">Beta prototype · No backend</p>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main" id="main">
+    <!-- ----- REELS / DISCOVERY FEED (customer landing) ----- -->
+    <section class="view view-reels" data-view="reels">
+      <div class="view-head">
+        <h2>Real work, scrollable.</h2>
+        <p class="muted">Swipe through portfolio pieces from vetted artists. Tap an artist to book straight from the feed.</p>
+      </div>
+      <div id="reelsFeed" class="reels-feed" tabindex="0" aria-label="Tattoo work feed"></div>
+      <p id="reelsEmpty" class="empty" hidden>The feed is loading… try refreshing if nothing appears.</p>
+    </section>
+
+    <!-- ----- LANDING (kept as secondary marketing page; not in nav) ----- -->
+    <section class="view view-landing" data-view="landing" hidden>
+      <div class="hero">
+        <div class="hero-text">
+          <span class="eyebrow">Beta · AI booking assistant</span>
+          <h1 class="display">The AI receptionist for tattoo artists.</h1>
+          <p class="lede">InkedN helps tattoo artists capture serious booking leads — even when they're busy in the chair. Customers describe their idea; the assistant collects the details; the artist gets a clean handoff.</p>
+          <div class="cta-row">
+            <button class="btn btn-primary" data-view="search">Find your artist</button>
+            <button class="btn btn-ghost" data-view="assistant">Talk to the assistant</button>
+          </div>
+          <ul class="trust">
+            <li><span class="dot"></span> Free during beta</li>
+            <li><span class="dot"></span> Small local rollout</li>
+            <li><span class="dot"></span> No spam, no payments yet</li>
+          </ul>
+        </div>
+        <div class="hero-card" aria-hidden="true">
+          <div class="hero-chat">
+            <div class="chat-bubble bot">
+              <strong>InkedN assistant</strong>
+              <p>Hi, I'm the InkedN assistant. Tell me your tattoo idea and I'll send the details to your artist.</p>
+            </div>
+            <div class="chat-bubble user">
+              <p>Half-sleeve floral, forearm, ~$600.</p>
+            </div>
+            <div class="chat-bubble bot">
+              <p>Got it. Preferred date and any reference?</p>
+            </div>
+          </div>
+          <div class="hero-lead">
+            <p class="muted small">New lead · 2 min ago</p>
+            <p><strong>Jasmine R.</strong> · half-sleeve floral · $500–$800</p>
+          </div>
+        </div>
+      </div>
+
+      <section class="grid-3">
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 16 0 8 8 0 0 1-16 0Zm8-4v4l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Capture leads 24/7</h3>
+          <p>The assistant answers when you can't, collects the details that matter, and sends you a clean summary.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M3 7h18M3 12h12M3 17h18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </div>
+          <h3>Quality over quantity</h3>
+          <p>Customers describe placement, size, budget, and timing — so every lead is actually a real booking lead.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 3l8 4v6c0 5-3.5 7.5-8 8-4.5-.5-8-3-8-8V7l8-4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Calm by design</h3>
+          <p>No medical or legal advice. No fake humans. The assistant always says it's InkedN, and escalates when needed.</p>
+        </article>
+      </section>
+    </section>
+
+    <!-- ----- ARTIST SEARCH ----- -->
+    <section class="view" data-view="search" hidden>
+      <div class="view-head">
+        <h2>Find an artist</h2>
+        <p class="muted">Filter by style, city, and walk-in availability.</p>
+      </div>
+      <div class="filters">
+        <label class="field">
+          <span>Search</span>
+          <input id="searchQuery" type="search" placeholder="Name or shop…" />
+        </label>
+        <label class="field">
+          <span>Style</span>
+          <select id="filterStyle">
+            <option value="">Any style</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>City</span>
+          <select id="filterCity">
+            <option value="">Any city</option>
+          </select>
+        </label>
+        <label class="checkfield">
+          <input id="filterWalkIns" type="checkbox" />
+          <span>Walk-ins only</span>
+        </label>
+      </div>
+      <div id="artistGrid" class="artist-grid"></div>
+      <p id="artistEmpty" class="empty" hidden>No artists match those filters. Try clearing one.</p>
+    </section>
+
+    <!-- ----- ARTIST PROFILE ----- -->
+    <section class="view" data-view="profile" hidden>
+      <button class="back-link" data-view="search">← Back to artists</button>
+      <div id="profileBody"></div>
+    </section>
+
+    <!-- ----- BOOKING REQUEST ----- -->
+    <section class="view" data-view="booking" hidden>
+      <div class="view-head">
+        <h2>Request a booking</h2>
+        <p class="muted">Send your tattoo idea straight to the artist. No account needed for the beta.</p>
+      </div>
+      <form id="bookingForm" class="card form-card" novalidate>
+        <div class="form-grid">
+          <label class="field"><span>Your name</span><input name="customerName" required /></label>
+          <label class="field"><span>Phone</span><input name="customerPhone" inputmode="tel" placeholder="(555) 555-0123" required /></label>
+          <label class="field"><span>Preferred artist</span>
+            <select name="artistId" id="bookingArtist"></select>
+          </label>
+          <label class="field"><span>Tattoo idea</span><textarea name="tattooIdea" rows="3" placeholder="Half-sleeve floral, fine line…" required></textarea></label>
+          <label class="field"><span>Placement</span><input name="placement" placeholder="Forearm, ribcage…" /></label>
+          <label class="field"><span>Approx. size</span><input name="size" placeholder="4 inches, palm-sized…" /></label>
+          <label class="field"><span>Budget</span><input name="budget" placeholder="$300–$600" /></label>
+          <label class="field"><span>Preferred date</span><input name="preferredDate" type="date" /></label>
+          <label class="field span-2"><span>Reference link (optional)</span><input name="reference" type="url" placeholder="https://…" /></label>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Send request</button>
+          <button class="btn btn-ghost" type="button" data-view="assistant">Use AI assistant instead</button>
+        </div>
+        <p id="bookingMsg" class="form-msg" hidden></p>
+      </form>
+    </section>
+
+    <!-- ----- AI ASSISTANT ----- -->
+    <section class="view view-chat" data-view="assistant" hidden>
+      <div class="view-head">
+        <h2>InkedN assistant</h2>
+        <p class="muted">A mock receptionist that collects your details and writes a clean handoff for the artist.</p>
+      </div>
+      <div class="chat card">
+        <div id="chatLog" class="chat-log" aria-live="polite"></div>
+        <form id="chatForm" class="chat-input">
+          <input id="chatInput" type="text" placeholder="Type your reply…" autocomplete="off" />
+          <button class="btn btn-primary" type="submit" aria-label="Send">Send</button>
+        </form>
+        <div class="chat-actions">
+          <button class="chip" type="button" id="chatRestart">Restart</button>
+          <button class="chip" type="button" id="chatHandoff">Generate handoff</button>
+        </div>
+      </div>
+      <div id="handoffWrap" class="card handoff" hidden>
+        <h3>Handoff summary</h3>
+        <pre id="handoffOut"></pre>
+        <button class="btn btn-primary" id="handoffSend" type="button">Send to artist</button>
+      </div>
+    </section>
+
+    <!-- ----- SAVED ARTISTS ----- -->
+    <section class="view" data-view="saved" hidden>
+      <div class="view-head">
+        <h2>Saved artists</h2>
+        <p class="muted">Your shortlist, stored locally on this device.</p>
+      </div>
+      <div id="savedGrid" class="artist-grid"></div>
+      <p id="savedEmpty" class="empty" hidden>You haven't saved any artists yet. Tap the heart on an artist card.</p>
+    </section>
+
+    <!-- ----- ARTIST DASHBOARD ----- -->
+    <section class="view" data-view="dashboard" hidden>
+      <div class="view-head">
+        <h2>Artist dashboard</h2>
+        <p class="muted">Quick view of leads coming in from the InkedN assistant.</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="stat-num" id="statNew">0</span><span class="stat-label">New</span></div>
+        <div class="stat"><span class="stat-num" id="statContacted">0</span><span class="stat-label">Contacted</span></div>
+        <div class="stat"><span class="stat-num" id="statBooked">0</span><span class="stat-label">Booked</span></div>
+        <div class="stat"><span class="stat-num" id="statClosed">0</span><span class="stat-label">Closed</span></div>
+      </div>
+      <div class="leads-toolbar">
+        <div class="seg" role="tablist" aria-label="Filter leads">
+          <button class="seg-btn is-active" data-lead-filter="all">All</button>
+          <button class="seg-btn" data-lead-filter="new">New</button>
+          <button class="seg-btn" data-lead-filter="contacted">Contacted</button>
+          <button class="seg-btn" data-lead-filter="booked">Booked</button>
+          <button class="seg-btn" data-lead-filter="closed">Closed</button>
+        </div>
+      </div>
+      <div id="leadList" class="lead-list"></div>
+      <p id="leadEmpty" class="empty" hidden>No leads in this view yet.</p>
+    </section>
+
+    <!-- ----- LEAD DETAIL ----- -->
+    <section class="view" data-view="lead" hidden>
+      <button class="back-link" data-view="dashboard">← Back to dashboard</button>
+      <div id="leadDetail"></div>
+    </section>
+
+    <!-- ----- ARTIST PROFILE EDITOR ----- -->
+    <section class="view" data-view="editor" hidden>
+      <div class="view-head">
+        <h2>Profile editor</h2>
+        <p class="muted">Update what customers see on your InkedN profile.</p>
+      </div>
+      <form id="editorForm" class="card form-card">
+        <div class="form-grid">
+          <label class="field"><span>Artist name</span><input name="name" /></label>
+          <label class="field"><span>Shop name</span><input name="shop" /></label>
+          <label class="field"><span>City</span><input name="city" /></label>
+          <label class="field"><span>Hourly rate</span><input name="hourlyRate" placeholder="$180/hr" /></label>
+          <label class="field"><span>Instagram</span><input name="instagram" placeholder="@handle" /></label>
+          <label class="field"><span>Styles (comma-separated)</span><input name="styles" placeholder="Fine line, Floral, Black & grey" /></label>
+          <label class="field span-2"><span>Bio</span><textarea name="bio" rows="4"></textarea></label>
+          <label class="checkfield span-2">
+            <input type="checkbox" name="acceptsWalkIns" />
+            <span>Accepting walk-ins</span>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit">Save profile</button>
+          <span class="muted small" id="editorMsg"></span>
+        </div>
+      </form>
+    </section>
+
+    <!-- ----- ADMIN DASHBOARD ----- -->
+    <section class="view" data-view="admin" hidden>
+      <div class="view-head">
+        <h2>Admin overview</h2>
+        <p class="muted">Beta health at a glance.</p>
+      </div>
+      <div class="stats stats-4">
+        <div class="stat"><span class="stat-num" id="adminArtists">0</span><span class="stat-label">Artists</span></div>
+        <div class="stat"><span class="stat-num" id="adminLeads">0</span><span class="stat-label">Total leads</span></div>
+        <div class="stat"><span class="stat-num" id="adminBookings">0</span><span class="stat-label">Bookings</span></div>
+        <div class="stat"><span class="stat-num" id="adminConv">0%</span><span class="stat-label">Lead → booked</span></div>
+      </div>
+      <div class="admin-grid">
+        <div class="card">
+          <h3>Recent leads</h3>
+          <div id="adminLeadList" class="lead-list lead-list-compact"></div>
+        </div>
+        <div class="card">
+          <h3>Artists</h3>
+          <div id="adminArtistList" class="admin-artist-list"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ===================== TOAST ===================== -->
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
